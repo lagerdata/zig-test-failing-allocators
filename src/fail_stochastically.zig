@@ -52,26 +52,3 @@ pub const FailingAllocator = struct {
         return self.internal_allocator.resizeFn(self.internal_allocator, old_mem, old_align, new_len, len_align, ra);
     }
 };
-
-test "fail allocation stochastically" {
-    var prng = rand.DefaultPrng.init(0);
-    const functionThatUsesAnAllocator = @import("util.zig").functionThatUsesAnAllocator;
-
-    const numallocs_env = std.os.getenv("NUMALLOCS") orelse "10";
-    const numallocs = try std.fmt.parseInt(usize, numallocs_env, 10);
-
-    const fail_chance_env = std.os.getenv("FAILCHANCE") orelse "0.1";
-    const fail_chance = try std.fmt.parseFloat(f64, fail_chance_env);
-
-    var failing_allocator = FailingAllocator.init(std.testing.allocator, fail_chance, &prng.random);
-
-    var result = functionThatUsesAnAllocator(&failing_allocator.allocator, numallocs);
-    if (result) |value| {
-        std.debug.print("No memory errors\n", .{});
-        std.testing.expect(value == numallocs);
-    } else |err| {
-        std.debug.print("Memory error caught\n", .{});
-        std.testing.expect(err == error.OutOfMemory);
-    }
-}
-

@@ -48,16 +48,3 @@ pub const FailingAllocator = struct {
         return self.internal_allocator.resizeFn(self.internal_allocator, old_mem, old_align, new_len, len_align, ra);
     }
 };
-
-test "fail on size N allocation" {
-    const functionThatUsesAnAllocator = @import("util.zig").functionThatUsesAnAllocator;
-
-    var failing_allocator = FailingAllocator.init(std.testing.allocator, 5);
-
-    var result = functionThatUsesAnAllocator(&failing_allocator.allocator, 10);
-    // std.testing.expect((try result) == 10);
-
-    // result = functionThatUsesAnAllocator(&failing_allocator.allocator, 5);
-    // std.testing.expectError(error.OutOfMemory, result);
-}
-
